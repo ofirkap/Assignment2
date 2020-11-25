@@ -19,7 +19,7 @@ class MessageBusImplTest {
 
         }
     }
-    private boolean test1;
+
     @BeforeEach
     void setUp() {
     }
