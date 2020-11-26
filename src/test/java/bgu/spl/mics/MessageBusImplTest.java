@@ -19,7 +19,7 @@ class MessageBusImplTest {
 
     @BeforeEach
     void setUp() {
-        someBus = new MessageBusImpl();
+        someBus = MessageBusImpl.getInstance();
         subscriber = new ExampleEventHandlerService("event sender", new String[]{"1"});
     }
 
@@ -29,24 +29,30 @@ class MessageBusImplTest {
         subscriber = null;
     }
 
-    //ofir
     @Test
-    void subscribeEvent() {
+    void testGetInstance() {
+        assertNotNull(someBus);
+        assertEquals(someBus, MessageBusImpl.getInstance());
     }
 
     //ofir
     @Test
-    void subscribeBroadcast() {
+    void testSubscribeEvent() {
+    }
+
+    //ofir
+    @Test
+    void testSubscribeBroadcast() {
     }
 
     //amit
     @Test
-    void complete() {
+    void testComplete() {
     }
 
     //ofir
     @Test
-    void sendBroadcast() {
+    void testSendBroadcast() {
         ExampleBroadcast broadcast = new ExampleBroadcast("hi");
         someBus.register(subscriber);
         someBus.subscribeBroadcast(broadcast.getClass(), subscriber);
@@ -60,7 +66,7 @@ class MessageBusImplTest {
 
     //ofir
     @Test
-    void sendEvent() {
+    void testSendEvent() {
         ExampleEvent event = new ExampleEvent("sender");
         someBus.register(subscriber);
         someBus.subscribeEvent(event.getClass(), subscriber);
@@ -69,17 +75,17 @@ class MessageBusImplTest {
 
     //amit
     @Test
-    void register() {
+    void testRegister() {
     }
 
     //amit
     @Test
-    void unregister() {
+    void testUnregister() {
     }
 
     //amit
     @Test
-    void awaitMessage() {
+    void testAwaitMessage() {
     }
 }
     /*private class SomeService extends MicroService {
