@@ -61,6 +61,8 @@ class MessageBusImplTest {
             assertEquals(someBus.awaitMessage(subscriber).toString(), "hi");
         } catch (InterruptedException e) {
             System.out.println("test failed, broadcast wasn't sent");
+        } catch (NullPointerException e) {
+            fail();
         }
     }
 
