@@ -14,6 +14,74 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class MessageBusImplTest {
 
+    private MessageBus someBus;
+    private MicroService subscriber;
+
+    @BeforeEach
+    void setUp() {
+        someBus = new MessageBusImpl();
+        subscriber = new ExampleEventHandlerService("event sender", new String[]{"1"});
+    }
+
+    @AfterEach
+    void tearDown() {
+        someBus = null;
+        subscriber = null;
+    }
+
+    //ofir
+    @Test
+    void subscribeEvent() {
+    }
+
+    //ofir
+    @Test
+    void subscribeBroadcast() {
+    }
+
+    //amit
+    @Test
+    void complete() {
+    }
+
+    //ofir
+    @Test
+    void sendBroadcast() {
+        ExampleBroadcast broadcast = new ExampleBroadcast("hi");
+        someBus.register(subscriber);
+        someBus.subscribeBroadcast(broadcast.getClass(), subscriber);
+        someBus.sendBroadcast(broadcast);
+        try {
+            assertEquals(someBus.awaitMessage(subscriber).toString(), "hi");
+        } catch (InterruptedException e) {
+            System.out.println("test failed, broadcast wasn't sent");
+        }
+    }
+
+    //ofir
+    @Test
+    void sendEvent() {
+        ExampleEvent event = new ExampleEvent("sender");
+        someBus.register(subscriber);
+        someBus.subscribeEvent(event.getClass(), subscriber);
+        assertNotNull(someBus.sendEvent(event));
+    }
+
+    //amit
+    @Test
+    void register() {
+    }
+
+    //amit
+    @Test
+    void unregister() {
+    }
+
+    //amit
+    @Test
+    void awaitMessage() {
+    }
+}
     /*private class SomeService extends MicroService {
 
         private boolean isEvent;
@@ -38,79 +106,9 @@ class MessageBusImplTest {
             }
             terminate();
         }
-    }*/
-
+    }
     private class Callback implements bgu.spl.mics.Callback<Boolean> {
         public void call(Boolean c) {
             c = true;
         }
-    }
-
-    private MessageBus someBus;
-    private MicroService subscriber;
-    private ExampleMessageSenderService sender;
-    private Message msg;
-
-    @BeforeEach
-    void setUp() {
-        someBus = new MessageBusImpl();
-        subscriber = new ExampleEventHandlerService("event sender", new String[]{"1"});
-        sender = new ExampleMessageSenderService("event subscriber", new String[]{"event"});
-    }
-
-    @AfterEach
-    void tearDown() {
-    }
-
-    //ofir
-    @Test
-    void subscribeEvent() {
-        someBus.register(subscriber);
-        someBus.subscribeEvent(ExampleEvent.class, subscriber);
-        Future<String> misc = sender.sendEvent(new ExampleEvent(sender.getName()));
-
-        try{
-            assertNotNull(someBus.awaitMessage(subscriber));
-        } catch (InterruptedException e) {
-            System.out.println("test failed, message wasn't received");
-        }
-    }
-
-    //ofir
-    @Test
-    void subscribeBroadcast() {
-    }
-
-    //amit
-    @Test
-    void complete() {
-    }
-
-    //ofir
-    @Test
-    void sendBroadcast() {
-    }
-
-    //ofir
-    @Test
-    void sendEvent() {
-        MicroService m1 = new SomeService(true);
-        m1.initialize();
-
-    }
-
-    //amit
-    @Test
-    void register() {
-    }
-
-    //amit
-    @Test
-    void unregister() {
-    }
-
-    //amit
-    @Test
-    void awaitMessage() {
-    }
-}
+    }*/
