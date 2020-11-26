@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class MessageBusImplTest {
 
-    private class SomeService extends MicroService {
+    /*private class SomeService extends MicroService {
 
         private boolean isEvent;
         private boolean happend;
@@ -38,7 +38,7 @@ class MessageBusImplTest {
             }
             terminate();
         }
-    }
+    }*/
 
     private class Callback implements bgu.spl.mics.Callback<Boolean> {
         public void call(Boolean c) {
