@@ -7,58 +7,59 @@ package bgu.spl.mics;
  */
 public class MessageBusImpl implements MessageBus {
 
-	private static MessageBusImpl instance = null;
+    private static MessageBusImpl instance = null;
 
-	private MessageBusImpl(){
+    private MessageBusImpl() {
 
-	}
-
-	public static MessageBusImpl getInstance(){
-		if (instance==null)
-			instance = new MessageBusImpl();
-		return instance;
-	}
-	
-	@Override
-	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-		
-	}
-
-	@Override
-	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-		
     }
 
-	@Override @SuppressWarnings("unchecked")
-	public <T> void complete(Event<T> e, T result) {
-		
-	}
+    public static MessageBusImpl getInstance() {
+        if (instance == null)
+            instance = new MessageBusImpl();
+        return instance;
+    }
 
-	@Override
-	public void sendBroadcast(Broadcast b) {
-		
-	}
+    @Override
+    public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
 
-	
-	@Override
-	public <T> Future<T> sendEvent(Event<T> e) {
-		
+    }
+
+    @Override
+    public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
+
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> void complete(Event<T> e, T result) {
+
+    }
+
+    @Override
+    public void sendBroadcast(Broadcast b) {
+
+    }
+
+
+    @Override
+    public <T> Future<T> sendEvent(Event<T> e) {
+
         return null;
-	}
+    }
 
-	@Override
-	public void register(MicroService m) {
-		
-	}
+    @Override
+    public void register(MicroService m) {
 
-	@Override
-	public void unregister(MicroService m) {
-		
-	}
+    }
 
-	@Override
-	public Message awaitMessage(MicroService m) throws InterruptedException {
-		
-		return null;
-	}
+    @Override
+    public void unregister(MicroService m) {
+
+    }
+
+    @Override
+    public Message awaitMessage(MicroService m) throws InterruptedException {
+
+        return null;
+    }
 }
