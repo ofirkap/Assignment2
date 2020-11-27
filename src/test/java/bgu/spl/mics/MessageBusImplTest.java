@@ -109,33 +109,3 @@ class MessageBusImplTest {
         }
     }
 }
-    /*private class SomeService extends MicroService {
-
-        private boolean isEvent;
-        private boolean happend;
-
-        public SomeService(boolean isEvent) {
-            super("service");
-            this.isEvent = isEvent;
-            this.happend = false;
-        }
-
-        @Override
-        protected void initialize() {
-            if (isEvent) {
-                subscribeEvent(ExampleEvent.class, ev -> {
-                    happend = true;
-                });
-            } else {
-                subscribeBroadcast(ExampleBroadcast.class, message -> {
-                    happend = true;
-                });
-            }
-            terminate();
-        }
-    }
-    private class Callback implements bgu.spl.mics.Callback<Boolean> {
-        public void call(Boolean c) {
-            c = true;
-        }
-    }*/
