@@ -48,6 +48,11 @@ class MessageBusImplTest {
     //amit
     @Test
     void testComplete() {
+        ExampleEvent event = new ExampleEvent(subscriber.getName());
+        Future<String> futureObject = subscriber.sendEvent(event);
+        assertFalse(futureObject.isDone());
+        someBus.complete(event,"resolved");
+        assertTrue(futureObject.isDone());
     }
 
     //ofir
@@ -102,7 +107,6 @@ class MessageBusImplTest {
         } catch (InterruptedException e) {
             fail();
         }
-
     }
 }
     /*private class SomeService extends MicroService {
