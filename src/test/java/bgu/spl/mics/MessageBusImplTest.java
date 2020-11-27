@@ -88,6 +88,21 @@ class MessageBusImplTest {
     //amit
     @Test
     void testAwaitMessage() {
+        someBus.register(subscriber);
+        ExampleEvent event = new ExampleEvent("sender");
+        someBus.subscribeEvent(event.getClass(),subscriber);
+        try {
+            assertEquals(null, someBus.awaitMessage(subscriber));
+        } catch (InterruptedException e) {
+            fail();
+        }
+        someBus.sendEvent(event);
+        try {
+            assertEquals(event, someBus.awaitMessage(subscriber));
+        } catch (InterruptedException e) {
+            fail();
+        }
+
     }
 }
     /*private class SomeService extends MicroService {
