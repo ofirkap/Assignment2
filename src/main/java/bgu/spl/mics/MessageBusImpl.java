@@ -1,8 +1,8 @@
 package bgu.spl.mics;
 
-import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * The {@link MessageBusImpl class is the implementation of the MessageBus interface.
@@ -13,12 +13,14 @@ public class MessageBusImpl implements MessageBus {
 
     private static MessageBusImpl instance = null;
 
-    private ConcurrentHashMap<MicroService, Queue<Message>> serviceMap;
-    private ConcurrentHashMap<Class, Queue<MicroService>> messageMap;
+    private final ConcurrentHashMap<MicroService, LinkedBlockingQueue<Message>> services;
+    private final ConcurrentHashMap<Class, ConcurrentLinkedQueue<MicroService>> messageTypes;
+    private final ConcurrentHashMap<Event, Future> events;
 
     private MessageBusImpl() {
-        serviceMap = new ConcurrentHashMap<>();
-        messageMap = new ConcurrentHashMap<>();
+        services = new ConcurrentHashMap<>();
+        messageTypes = new ConcurrentHashMap<>();
+        events = new ConcurrentHashMap<>();
     }
 
     /*
@@ -39,58 +41,70 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-        if (!messageMap.contains(type))
+        if (!messageTypes.containsKey(type))
             synchronized (this) {
-                if (!messageMap.contains(type))
-                    messageMap.put(type, new ConcurrentLinkedQueue<>());
+                if (!messageTypes.containsKey(type))
+                    messageTypes.put(type, new ConcurrentLinkedQueue<>());
             }
-        messageMap.get(type).add(m);
+        messageTypes.get(type).add(m);
     }
 
-    //why are these functions different???
     @Override
     public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-        if (!messageMap.contains(type))
+        if (!messageTypes.containsKey(type))
             synchronized (this) {
-                if (!messageMap.contains(type))
-                    messageMap.put(type, new ConcurrentLinkedQueue<>());
+                if (!messageTypes.containsKey(type))
+                    messageTypes.put(type, new ConcurrentLinkedQueue<>());
             }
-        messageMap.get(type).add(m);
+        messageTypes.get(type).add(m);
     }
 
+    //make sure 2 services cant handle same event
     @Override
     @SuppressWarnings("unchecked")
     public <T> void complete(Event<T> e, T result) {
-
+        if (events.containsKey(e))
+            events.get(e).resolve(result);
     }
 
+    //more efficient thread safety??
     @Override
-    public void sendBroadcast(Broadcast b) {
-
+    public synchronized void sendBroadcast(Broadcast b) {
+        ConcurrentLinkedQueue<MicroService> receivers = messageTypes.get(b.getClass());
+        for (MicroService service : receivers)
+            services.get(service).add(b);
     }
 
-
+    //need thread safety in case 2 threads try to sent events subscribed by the same service
     @Override
     public <T> Future<T> sendEvent(Event<T> e) {
-
+        MicroService service = messageTypes.get(e.getClass()).poll();
+        if (service != null) {
+            services.get(service).add(e);
+            messageTypes.get(e.getClass()).add(service);
+            Future<T> future = new Future<>();
+            events.put(e, future);
+            return future;
+        }
         return null;
     }
 
     @Override
     public void register(MicroService m) {
-        if(!serviceMap.contains(m))
-            serviceMap.put(m, new ConcurrentLinkedQueue<>());
+        if (!services.containsKey(m))
+            services.put(m, new LinkedBlockingQueue<>());
     }
 
     @Override
     public void unregister(MicroService m) {
-        serviceMap.remove(m);
-
+        services.remove(m);
     }
 
     @Override
     public Message awaitMessage(MicroService m) throws InterruptedException {
-
-        return null;
+        LinkedBlockingQueue<Message> messages = services.get(m);
+        if (messages == null)
+            throw new IllegalStateException("The Microservice " + m.getName() + "isn't registered");
+        return messages.take();
     }
 }
