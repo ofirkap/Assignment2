@@ -11,7 +11,9 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class MessageBusImpl implements MessageBus {
 
-    private static MessageBusImpl instance = null;
+    private static class SingletonHolder{
+        private static final MessageBusImpl instance = new MessageBusImpl();
+    }
 
     private final ConcurrentHashMap<MicroService, LinkedBlockingQueue<Message>> services;
     private final ConcurrentHashMap<Class, ConcurrentLinkedQueue<MicroService>> messageTypes;
@@ -23,20 +25,9 @@ public class MessageBusImpl implements MessageBus {
         events = new ConcurrentHashMap<>();
     }
 
-    /*
-    To create a thread safe Singleton we create a local instance of the MessageBus
-    and only if we need initialize it we use synchronized to make sure only one thread
-    preforms the initialization.
-    */
+    //The messageBus is a Singleton
     public static MessageBusImpl getInstance() {
-        if (instance == null) {
-            synchronized (MessageBusImpl.class) {
-                //check again in case a thread was blocked when 'instance' was NULL but it's been initialized since
-                if (instance == null)
-                    instance = new MessageBusImpl();
-            }
-        }
-        return instance;
+        return SingletonHolder.instance;
     }
 
     @Override
@@ -75,7 +66,7 @@ public class MessageBusImpl implements MessageBus {
             services.get(service).add(b);
     }
 
-    //need thread safety in case 2 threads try to sent events subscribed by the same service
+    //need thread safety in case 2 threads try to sent events subscribed by the same service!!!
     @Override
     public <T> Future<T> sendEvent(Event<T> e) {
         MicroService service = messageTypes.get(e.getClass()).poll();
@@ -95,9 +86,12 @@ public class MessageBusImpl implements MessageBus {
             services.put(m, new LinkedBlockingQueue<>());
     }
 
+    //need thread safety!!!
+    //Removes the message queue allocated to m and removes all of its subscriptions froms every message type
     @Override
     public void unregister(MicroService m) {
         services.remove(m);
+        messageTypes.forEach((key,queue)-> queue.remove(m));
     }
 
     @Override

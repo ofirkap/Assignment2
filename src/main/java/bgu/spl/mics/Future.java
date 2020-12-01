@@ -30,6 +30,7 @@ public class Future<T> {
      *
      * @return return the result of type T if it is available, if not wait until it is available.
      */
+    //wait doesnt work
     public T get() {
         if (!isDone)
             try {
@@ -46,7 +47,7 @@ public class Future<T> {
     public void resolve(T result) {
         this.result = result;
         this.isDone = true;
-        notify();
+        //if thread is waiting need to notify it somehow
     }
 
     /**
@@ -68,12 +69,13 @@ public class Future<T> {
      * wait for {@code timeout} TimeUnits {@code unit}. If time has
      * elapsed, return null.
      */
+    //wait doesnt work
     public T get(long timeout, TimeUnit unit) {
         if (isDone)
             return result;
         else
             try {
-                wait(unit.toNanos(timeout));
+                wait(unit.toMillis(timeout), 0);
             } catch (InterruptedException e) {
                 get(timeout, unit);
             }
