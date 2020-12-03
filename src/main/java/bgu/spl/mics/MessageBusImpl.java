@@ -11,7 +11,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class MessageBusImpl implements MessageBus {
 
-    private static class SingletonHolder{
+    private static class SingletonHolder {
         private static final MessageBusImpl instance = new MessageBusImpl();
     }
 
@@ -30,26 +30,29 @@ public class MessageBusImpl implements MessageBus {
         return SingletonHolder.instance;
     }
 
+    //synchronization only on type to allow other, unrelated types to register as well
     @Override
     public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
         if (!messageTypes.containsKey(type))
-            synchronized (this) {
+            synchronized (type) {
                 if (!messageTypes.containsKey(type))
                     messageTypes.put(type, new ConcurrentLinkedQueue<>());
             }
         messageTypes.get(type).add(m);
     }
 
+    //synchronization only on type to allow other, unrelated types to register as well
     @Override
     public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
         if (!messageTypes.containsKey(type))
-            synchronized (this) {
+            synchronized (type) {
                 if (!messageTypes.containsKey(type))
                     messageTypes.put(type, new ConcurrentLinkedQueue<>());
             }
         messageTypes.get(type).add(m);
     }
 
+    //need thread safety!!!
     //make sure 2 services cant handle same event
     @Override
     @SuppressWarnings("unchecked")
@@ -58,28 +61,35 @@ public class MessageBusImpl implements MessageBus {
             events.get(e).resolve(result);
     }
 
-    //more efficient thread safety??
+    //same lock as subscribe to ensure you cant subscribe to this broadcast type as it's being sent
     @Override
-    public synchronized void sendBroadcast(Broadcast b) {
+    public void sendBroadcast(Broadcast b) {
         ConcurrentLinkedQueue<MicroService> receivers = messageTypes.get(b.getClass());
-        for (MicroService service : receivers)
-            services.get(service).add(b);
+        if (receivers != null) {
+            synchronized (b.getClass()) {
+                for (MicroService service : receivers)
+                    services.get(service).add(b);
+            }
+        }
     }
 
-    //need thread safety in case 2 threads try to sent events subscribed by the same service!!!
+    //same lock as subscribe to ensure you cant subscribe to this event type as it's being sent
     @Override
     public <T> Future<T> sendEvent(Event<T> e) {
         MicroService service = messageTypes.get(e.getClass()).poll();
         if (service != null) {
-            services.get(service).add(e);
-            messageTypes.get(e.getClass()).add(service);
-            Future<T> future = new Future<>();
-            events.put(e, future);
-            return future;
+            synchronized (e.getClass()) {
+                services.get(service).add(e);
+                messageTypes.get(e.getClass()).add(service);
+                Future<T> future = new Future<>();
+                events.put(e, future);
+                return future;
+            }
         }
         return null;
     }
 
+    //need thread safety!!!
     @Override
     public void register(MicroService m) {
         if (!services.containsKey(m))
@@ -91,9 +101,10 @@ public class MessageBusImpl implements MessageBus {
     @Override
     public void unregister(MicroService m) {
         services.remove(m);
-        messageTypes.forEach((key,queue)-> queue.remove(m));
+        messageTypes.forEach((key, queue) -> queue.remove(m));
     }
 
+    //need thread safety!!!
     @Override
     public Message awaitMessage(MicroService m) throws InterruptedException {
         LinkedBlockingQueue<Message> messages = services.get(m);

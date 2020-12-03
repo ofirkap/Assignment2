@@ -14,6 +14,9 @@ public class Future<T> {
     private boolean isDone;
     private T result;
 
+    private final Object getLock = new Object();
+    private final Object resolveLock = new Object();
+
     /**
      * This should be the the only public constructor in this class.
      */
@@ -30,13 +33,14 @@ public class Future<T> {
      *
      * @return return the result of type T if it is available, if not wait until it is available.
      */
-    //wait doesnt work
+    //is there a better thread safety method here???
+    //what happens if resolve and get act simultaneously???
     public T get() {
-        if (!isDone)
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                get();
+        while (!isDone)
+            synchronized (getLock) {
+                try {
+                    wait();
+                } catch (InterruptedException ignored) {}
             }
         return result;
     }
@@ -44,10 +48,14 @@ public class Future<T> {
     /**
      * Resolves the result of this Future object.
      */
+    //is there a better thread safety method here???
+    //what happens if resolve and get act simultaneously???
     public void resolve(T result) {
-        this.result = result;
-        this.isDone = true;
-        //if thread is waiting need to notify it somehow
+        synchronized (resolveLock) {
+            this.result = result;
+            this.isDone = true;
+            this.notifyAll();
+        }
     }
 
     /**
@@ -69,17 +77,19 @@ public class Future<T> {
      * wait for {@code timeout} TimeUnits {@code unit}. If time has
      * elapsed, return null.
      */
-    //wait doesnt work
+    //is there a better thread safety method here???
+    //what happens if resolve and get act simultaneously???
     public T get(long timeout, TimeUnit unit) {
-        if (isDone)
-            return result;
-        else
-            try {
-                wait(unit.toMillis(timeout), 0);
-            } catch (InterruptedException e) {
-                get(timeout, unit);
+        if (!isDone) {
+            synchronized (getLock) {
+                try {
+                    wait(unit.toMillis(timeout));
+                } catch (InterruptedException e) {
+                    get(timeout, unit);
+                }
+                return null;
             }
-        return null;
+        }
+        return result;
     }
-
 }
