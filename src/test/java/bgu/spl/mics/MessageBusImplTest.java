@@ -25,7 +25,6 @@ class MessageBusImplTest {
 
     @AfterEach
     void tearDown() {
-        someBus = null;
         subscriber = null;
     }
 
@@ -49,10 +48,14 @@ class MessageBusImplTest {
     @Test
     void testComplete() {
         ExampleEvent event = new ExampleEvent(subscriber.getName());
+        someBus.register(subscriber);
         Future<String> futureObject = subscriber.sendEvent(event);
-        assertFalse(futureObject.isDone());
-        someBus.complete(event,"resolved");
-        assertTrue(futureObject.isDone());
+        if (futureObject != null) {
+            assertFalse(futureObject.isDone());
+            someBus.complete(event, "resolved");
+            assertTrue(futureObject.isDone());
+        }
+        someBus.unregister(subscriber);
     }
 
     //ofir
@@ -63,12 +66,15 @@ class MessageBusImplTest {
         someBus.subscribeBroadcast(broadcast.getClass(), subscriber);
         someBus.sendBroadcast(broadcast);
         try {
-            assertEquals(someBus.awaitMessage(subscriber).toString(), "hi");
+            assertEquals(someBus.awaitMessage(subscriber), broadcast);
         } catch (InterruptedException e) {
             System.out.println("test failed, broadcast wasn't sent");
+            someBus.unregister(subscriber);
         } catch (NullPointerException e) {
             fail();
+            someBus.unregister(subscriber);
         }
+        someBus.unregister(subscriber);
     }
 
     //ofir
@@ -78,6 +84,7 @@ class MessageBusImplTest {
         someBus.register(subscriber);
         someBus.subscribeEvent(event.getClass(), subscriber);
         assertNotNull(someBus.sendEvent(event));
+        someBus.unregister(subscriber);
     }
 
     //amit
@@ -95,17 +102,11 @@ class MessageBusImplTest {
     void testAwaitMessage() {
         someBus.register(subscriber);
         ExampleEvent event = new ExampleEvent("sender");
-        someBus.subscribeEvent(event.getClass(),subscriber);
-        try {
-            assertEquals(null, someBus.awaitMessage(subscriber));
-        } catch (InterruptedException e) {
-            fail();
-        }
+        someBus.subscribeEvent(event.getClass(), subscriber);
         someBus.sendEvent(event);
         try {
             assertEquals(event, someBus.awaitMessage(subscriber));
-        } catch (InterruptedException e) {
-            fail();
-        }
+        } catch (InterruptedException ignored) {}
+        someBus.unregister(subscriber);
     }
 }
