@@ -11,4 +11,41 @@ package bgu.spl.mics.application.passiveObjects;
  */
 public class Ewoks {
 
+    private static Ewoks instance = null;
+
+    private final int villageSize;
+    private final Ewok[] ewoksVillage;
+
+    private Ewoks(int numOfEwoks) {
+        this.villageSize = numOfEwoks;
+        this.ewoksVillage = new Ewok[this.villageSize];
+        for (int i = 1; i <= numOfEwoks; i++) {
+            ewoksVillage[i] =  new Ewok(i);
+        }
+    }
+
+    //The Ewoks class is a Singleton
+    public static Ewoks getInstance(int numOfEwoks) {
+        if (instance == null)
+            synchronized (Ewoks.class) {
+                if (instance == null)
+                    instance = new Ewoks(numOfEwoks);
+            }
+        return instance;
+    }
+
+    public int getNumOfEwoks() {
+        return villageSize;
+    }
+
+    //synchronized limits access to any specific ewok to only 1 thread at a time
+    public boolean acquireEwok(int serialNumber) {
+        if (ewoksVillage[serialNumber].isAvailable()) {
+            synchronized (ewoksVillage[serialNumber]) {
+                ewoksVillage[serialNumber].acquire();
+                return true;
+            }
+        }
+        return false;
+    }
 }

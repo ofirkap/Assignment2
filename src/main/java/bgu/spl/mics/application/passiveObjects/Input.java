@@ -5,7 +5,14 @@ public class Input {
 	int R2D2;
 	int Lando;
 	int Ewoks;
-	
+
+	public Input(Attack[] attacks, int r2D2, int lando, int ewoks) {
+		this.attacks = attacks;
+		R2D2 = r2D2;
+		Lando = lando;
+		Ewoks = ewoks;
+	}
+
 	public int getEwoks() {
 		return Ewoks;
 	}
