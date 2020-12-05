@@ -31,8 +31,4 @@ public class Ewok {
     public boolean isAvailable() {
         return available;
     }
-
-    public int getSerialNumber() {
-        return serialNumber;
-    }
 }

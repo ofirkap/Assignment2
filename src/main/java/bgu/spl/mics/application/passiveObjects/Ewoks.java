@@ -48,4 +48,8 @@ public class Ewoks {
         }
         return false;
     }
+
+    public synchronized void releaseEwok(int serialNumber){
+        ewoksVillage[serialNumber].release();
+    }
 }

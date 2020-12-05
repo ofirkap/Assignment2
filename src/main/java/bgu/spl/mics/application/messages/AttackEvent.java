@@ -10,4 +10,8 @@ public class AttackEvent implements Event<Boolean> {
     public AttackEvent(Attack attack) {
         this.attack = attack;
     }
+
+    public Attack getAttack() {
+        return attack;
+    }
 }
