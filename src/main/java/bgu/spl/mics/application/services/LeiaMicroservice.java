@@ -1,7 +1,5 @@
 package bgu.spl.mics.application.services;
 
-import java.util.ArrayList;
-import java.util.List;
 
 import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
@@ -28,9 +26,7 @@ public class LeiaMicroservice extends MicroService {
 
     @Override
     protected void initialize() {
-        subscribeBroadcast(TerminationBroadcast.class, (broadcast) -> {
-            terminate();
-        });
+        subscribeBroadcast(TerminationBroadcast.class, (broadcast) -> terminate());
         Future<Boolean>[] attackResults = new Future[attacks.length];
         boolean attackFinished = false;
         for (int i = 0; i < attacks.length; i++) {
@@ -39,6 +35,7 @@ public class LeiaMicroservice extends MicroService {
         for (int i = 0; i < attacks.length; i++) {
             attackFinished = attackResults[i].get();
         }
-        sendEvent(new DeactivationEvent());
+        if (attackFinished)
+            sendEvent(new DeactivationEvent());
     }
 }

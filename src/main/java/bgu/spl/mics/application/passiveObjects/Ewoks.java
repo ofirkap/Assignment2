@@ -13,12 +13,10 @@ public class Ewoks {
 
     private static Ewoks instance = null;
 
-    private final int villageSize;
     private final Ewok[] ewoksVillage;
 
     private Ewoks(int numOfEwoks) {
-        this.villageSize = numOfEwoks;
-        this.ewoksVillage = new Ewok[this.villageSize];
+        this.ewoksVillage = new Ewok[numOfEwoks];
         for (int i = 1; i <= numOfEwoks; i++) {
             ewoksVillage[i] =  new Ewok(i);
         }
@@ -32,10 +30,6 @@ public class Ewoks {
                     instance = new Ewoks(numOfEwoks);
             }
         return instance;
-    }
-
-    public int getNumOfEwoks() {
-        return villageSize;
     }
 
     //synchronized limits access to any specific ewok to only 1 thread at a time

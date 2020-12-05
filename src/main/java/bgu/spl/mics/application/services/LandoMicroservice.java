@@ -2,7 +2,6 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.BombDestroyerEvent;
-import bgu.spl.mics.application.messages.DeactivationEvent;
 import bgu.spl.mics.application.messages.TerminationBroadcast;
 
 /**
@@ -26,8 +25,6 @@ public class LandoMicroservice extends MicroService {
             complete(event, true);
             sendBroadcast(new TerminationBroadcast());
         });
-        subscribeBroadcast(TerminationBroadcast.class, (broadcast) -> {
-            terminate();
-        });
+        subscribeBroadcast(TerminationBroadcast.class, (broadcast) -> terminate());
     }
 }

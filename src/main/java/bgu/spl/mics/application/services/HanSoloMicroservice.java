@@ -22,8 +22,7 @@ public class HanSoloMicroservice extends MicroService {
         super("Han");
         this.myVillage = givenVillage;
     }
-
-
+    
     @Override
     protected void initialize() {
         subscribeEvent(AttackEvent.class, (event) -> {
@@ -36,8 +35,6 @@ public class HanSoloMicroservice extends MicroService {
             for (int serial : event.getAttack().getSerials())
                 myVillage.releaseEwok(serial);
         });
-        subscribeBroadcast(TerminationBroadcast.class, (broadcast) -> {
-            terminate();
-        });
+        subscribeBroadcast(TerminationBroadcast.class, (broadcast) -> terminate());
     }
 }

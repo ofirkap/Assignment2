@@ -32,9 +32,9 @@ public class C3POMicroservice extends MicroService {
             }
             Thread.sleep(event.getAttack().getDuration());
             complete(event, true);
+            for (int serial : event.getAttack().getSerials())
+                myVillage.releaseEwok(serial);
         });
-        subscribeBroadcast(TerminationBroadcast.class, (broadcast) -> {
-            terminate();
-        });
+        subscribeBroadcast(TerminationBroadcast.class, (broadcast) -> terminate());
     }
 }
