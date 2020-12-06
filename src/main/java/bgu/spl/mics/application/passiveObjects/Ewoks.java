@@ -17,8 +17,8 @@ public class Ewoks {
 
     private Ewoks(int numOfEwoks) {
         this.ewoksVillage = new Ewok[numOfEwoks];
-        for (int i = 1; i <= numOfEwoks; i++) {
-            ewoksVillage[i] =  new Ewok(i);
+        for (int i = 0; i < numOfEwoks; i++) {
+            ewoksVillage[i] =  new Ewok(i+1);
         }
     }
 

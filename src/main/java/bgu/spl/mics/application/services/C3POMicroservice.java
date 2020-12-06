@@ -2,7 +2,9 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.AttackEvent;
+import bgu.spl.mics.application.messages.AttackFinishTimeBroadcast;
 import bgu.spl.mics.application.messages.TerminationBroadcast;
+import bgu.spl.mics.application.passiveObjects.Diary;
 import bgu.spl.mics.application.passiveObjects.Ewoks;
 
 
@@ -17,14 +19,17 @@ import bgu.spl.mics.application.passiveObjects.Ewoks;
 public class C3POMicroservice extends MicroService {
 
     Ewoks myVillage;
+    Diary myDiary;
 
     public C3POMicroservice(Ewoks givenVillage) {
         super("C3PO");
         this.myVillage = givenVillage;
+        myDiary = Diary.getInstance();
     }
 
     @Override
     protected void initialize() {
+
         subscribeEvent(AttackEvent.class, (event) -> {
             for (int serial : event.getAttack().getSerials()) {
                 if (!myVillage.acquireEwok(serial))
@@ -34,7 +39,14 @@ public class C3POMicroservice extends MicroService {
             complete(event, true);
             for (int serial : event.getAttack().getSerials())
                 myVillage.releaseEwok(serial);
+            myDiary.getTotalAttacks().addAndGet(1);
         });
-        subscribeBroadcast(TerminationBroadcast.class, (broadcast) -> terminate());
+
+        subscribeBroadcast(AttackFinishTimeBroadcast.class, (broadcast) -> myDiary.setC3POFinish(System.currentTimeMillis()));
+
+        subscribeBroadcast(TerminationBroadcast.class, (broadcast) -> {
+            terminate();
+            myDiary.setC3POTerminate(System.currentTimeMillis());
+        });
     }
 }

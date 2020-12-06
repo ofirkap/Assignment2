@@ -6,13 +6,6 @@ public class Input {
 	int Lando;
 	int Ewoks;
 
-	public Input(Attack[] attacks, int r2D2, int lando, int ewoks) {
-		this.attacks = attacks;
-		this.R2D2 = r2D2;
-		this.Lando = lando;
-		this.Ewoks = ewoks;
-	}
-
 	public int getEwoks() {
 		return Ewoks;
 	}
