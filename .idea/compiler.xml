@@ -3,7 +3,7 @@
   <component name="CompilerConfiguration">
     <excludeFromCompile>
       <directory url="file://$PROJECT_DIR$/src/test" includeSubdirectories="false" />
-      <directory url="file://$PROJECT_DIR$/src/main/java/bgu/spl/mics/Tester" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/src/main/java/bgu/spl/mics/Tester" includeSubdirectories="false" />
     </excludeFromCompile>
     <annotationProcessing>
       <profile name="Maven default annotation processors profile" enabled="true">

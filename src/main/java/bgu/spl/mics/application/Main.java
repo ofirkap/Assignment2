@@ -24,13 +24,14 @@ public class Main {
             System.exit(0);
         }
 
-        Ewoks givenVillage = Ewoks.getInstance(myInput.getEwoks());
+        Ewoks village = Ewoks.getInstance();
+        village.setEwoksVillage(myInput.getEwoks());
         Attack[] attacks = myInput.getAttacks();
-        Thread leia = new Thread(new LeiaMicroservice(attacks));
-        Thread han = new Thread(new HanSoloMicroservice(givenVillage));
-        Thread c3po = new Thread(new C3POMicroservice(givenVillage));
-        Thread r2d2 = new Thread(new R2D2Microservice(myInput.getR2D2()));
-        Thread lando = new Thread(new LandoMicroservice(myInput.getLando()));
+        Thread leia = new Thread(new LeiaMicroservice(attacks), "Leia");
+        Thread han = new Thread(new HanSoloMicroservice(), "HanSolo");
+        Thread c3po = new Thread(new C3POMicroservice(), "C3PO");
+        Thread r2d2 = new Thread(new R2D2Microservice(myInput.getR2D2()), "R2D2");
+        Thread lando = new Thread(new LandoMicroservice(myInput.getLando()), "Lando");
 
         Diary myDiary = Diary.getInstance();
 

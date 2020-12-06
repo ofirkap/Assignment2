@@ -18,13 +18,11 @@ import bgu.spl.mics.application.passiveObjects.Ewoks;
  */
 public class C3POMicroservice extends MicroService {
 
-    Ewoks myVillage;
-    Diary myDiary;
+    Ewoks myVillage = Ewoks.getInstance();
+    Diary myDiary = Diary.getInstance();
 
-    public C3POMicroservice(Ewoks givenVillage) {
+    public C3POMicroservice() {
         super("C3PO");
-        this.myVillage = givenVillage;
-        myDiary = Diary.getInstance();
     }
 
     @Override
@@ -32,8 +30,13 @@ public class C3POMicroservice extends MicroService {
 
         subscribeEvent(AttackEvent.class, (event) -> {
             for (int serial : event.getAttack().getSerials()) {
-                if (!myVillage.acquireEwok(serial))
-                    wait();
+                if(!myVillage.acquireEwok(serial)){
+                    synchronized (myVillage.getClass()){
+                        try {
+                            wait();
+                        }catch (InterruptedException ignored){}
+                    }
+                }
             }
             Thread.sleep(event.getAttack().getDuration());
             complete(event, true);

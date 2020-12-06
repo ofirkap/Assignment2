@@ -18,13 +18,11 @@ import bgu.spl.mics.application.passiveObjects.Ewoks;
  */
 public class HanSoloMicroservice extends MicroService {
 
-    Ewoks myVillage;
-    Diary myDiary;
+    Ewoks myVillage = Ewoks.getInstance();
+    Diary myDiary = Diary.getInstance();
 
-    public HanSoloMicroservice(Ewoks givenVillage) {
+    public HanSoloMicroservice() {
         super("Han");
-        this.myVillage = givenVillage;
-        myDiary = Diary.getInstance();
     }
 
     @Override
@@ -32,8 +30,13 @@ public class HanSoloMicroservice extends MicroService {
 
         subscribeEvent(AttackEvent.class, (event) -> {
             for (int serial : event.getAttack().getSerials()) {
-                if (!myVillage.acquireEwok(serial))
-                    wait();
+                if (!myVillage.acquireEwok(serial)) {
+                    synchronized (myVillage.getClass()) {
+                        try {
+                            wait();
+                        } catch (InterruptedException ignored) {}
+                    }
+                }
             }
             Thread.sleep(event.getAttack().getDuration());
             complete(event, true);

@@ -78,4 +78,41 @@ public class Diary {
     public void setLandoTerminate(long landoTerminate) {
         LandoTerminate = landoTerminate;
     }
+
+
+    public long getHanSoloFinish() {
+        return HanSoloFinish;
+    }
+
+    public long getC3POFinish() {
+        return C3POFinish;
+    }
+
+    public long getR2D2Deactivate() {
+        return R2D2Deactivate;
+    }
+
+    public long getLeiaTerminate() {
+        return LeiaTerminate;
+    }
+
+    public long getHanSoloTerminate() {
+        return HanSoloTerminate;
+    }
+
+    public long getC3POTerminate() {
+        return C3POTerminate;
+    }
+
+    public long getR2D2Terminate() {
+        return R2D2Terminate;
+    }
+
+    public long getLandoTerminate() {
+        return LandoTerminate;
+    }
+
+    public void resetNumberAttacks(){
+        totalAttacks.compareAndSet(totalAttacks.get(),0);
+    }
 }

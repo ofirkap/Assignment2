@@ -1,6 +1,13 @@
 package bgu.spl.mics.application.passiveObjects;
 
 
+import bgu.spl.mics.*;
+
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 /**
  * Passive object representing the resource manager.
  * <p>
@@ -10,40 +17,37 @@ package bgu.spl.mics.application.passiveObjects;
  * You can add ONLY private methods and fields to this class.
  */
 public class Ewoks {
-
-    private static Ewoks instance = null;
-
-    private final Ewok[] ewoksVillage;
-
-    private Ewoks(int numOfEwoks) {
-        this.ewoksVillage = new Ewok[numOfEwoks];
-        for (int i = 0; i < numOfEwoks; i++) {
-            ewoksVillage[i] =  new Ewok(i+1);
-        }
+    
+    private static class SingletonHolder {
+        private static final Ewoks instance = new Ewoks();
     }
+
+    private Ewok[] ewoksVillage;
 
     //The Ewoks class is a Singleton
-    public static Ewoks getInstance(int numOfEwoks) {
-        if (instance == null)
-            synchronized (Ewoks.class) {
-                if (instance == null)
-                    instance = new Ewoks(numOfEwoks);
-            }
-        return instance;
+    public static Ewoks getInstance() {
+        return Ewoks.SingletonHolder.instance;
     }
 
+    public void setEwoksVillage(int villageSize){
+        this.ewoksVillage = new Ewok[villageSize];
+        for (int i = 0; i < villageSize; i++) {
+            ewoksVillage[i] = new Ewok(i + 1);
+        }
+    }
     //synchronized limits access to any specific ewok to only 1 thread at a time
     public boolean acquireEwok(int serialNumber) {
-        if (ewoksVillage[serialNumber].isAvailable()) {
-            synchronized (ewoksVillage[serialNumber]) {
-                ewoksVillage[serialNumber].acquire();
+        if (ewoksVillage[serialNumber - 1].isAvailable()) {
+            synchronized (ewoksVillage[serialNumber - 1]) {
+                ewoksVillage[serialNumber - 1].acquire();
                 return true;
             }
         }
         return false;
     }
 
-    public synchronized void releaseEwok(int serialNumber){
-        ewoksVillage[serialNumber].release();
+    public synchronized void releaseEwok(int serialNumber) {
+            ewoksVillage[serialNumber - 1].release();
+            notifyAll();
     }
 }

@@ -160,14 +160,10 @@ private static MessageBusImpl messageBus;
     	while (!terminated){
             try {
                 Message message = messageBus.awaitMessage(this);
-                if (message!=null){
-                    (Callback<Message>)callbacks.get(message.getClass()).call(message);
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+                Callback newCall = callbacks.get(message.getClass());
+                newCall.call(message);
+            } catch (InterruptedException ignored) {}
         }
-    	
     	messageBus.unregister(this);
     }
 
