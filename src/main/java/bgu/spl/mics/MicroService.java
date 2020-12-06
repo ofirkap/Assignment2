@@ -166,5 +166,4 @@ private static MessageBusImpl messageBus;
         }
     	messageBus.unregister(this);
     }
-
 }

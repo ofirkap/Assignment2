@@ -41,6 +41,14 @@ public class Main {
         r2d2.start();
         lando.start();
 
+        try {
+            leia.join();
+            han.join();
+            c3po.join();
+            r2d2.join();
+            lando.join();
+        }catch (InterruptedException ignored){}
+
         Gson myOutput = new GsonBuilder().setPrettyPrinting().create();
         try {
             FileWriter writer = new FileWriter(args[1]);

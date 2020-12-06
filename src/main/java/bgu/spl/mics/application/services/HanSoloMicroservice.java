@@ -29,19 +29,17 @@ public class HanSoloMicroservice extends MicroService {
     protected void initialize() {
 
         subscribeEvent(AttackEvent.class, (event) -> {
+            //Acquire all ewoks needed for the attack
             for (int serial : event.getAttack().getSerials()) {
-                if (!myVillage.acquireEwok(serial)) {
-                    synchronized (myVillage.getClass()) {
-                        try {
-                            wait();
-                        } catch (InterruptedException ignored) {}
-                    }
-                }
+                myVillage.acquireEwok(serial);
             }
+            //Attack (simulated by sleeping for the specified duration)
             Thread.sleep(event.getAttack().getDuration());
+            //Announce the attack is done and release all ewoks after finishing the attack
             complete(event, true);
             for (int serial : event.getAttack().getSerials())
                 myVillage.releaseEwok(serial);
+            //Increase the number of attacks preformed by 1
             myDiary.getTotalAttacks().addAndGet(1);
         });
 

@@ -25,6 +25,8 @@ public class LandoMicroservice extends MicroService {
     protected void initialize() {
 
         subscribeEvent(BombDestroyerEvent.class, (event) -> {
+            //Bomb (simulated by sleeping for the specified duration),
+            //announce the completion of the bombing and send a termination broadcast to all threads.
             Thread.sleep(duration);
             complete(event, true);
             sendBroadcast(new TerminationBroadcast());

@@ -52,8 +52,6 @@ public class MessageBusImpl implements MessageBus {
         messageTypes.get(type).add(m);
     }
 
-    //need thread safety!!!
-    //make sure 2 services cant handle same event
     @Override
     @SuppressWarnings("unchecked")
     public <T> void complete(Event<T> e, T result) {
@@ -104,7 +102,6 @@ public class MessageBusImpl implements MessageBus {
         messageTypes.forEach((key, queue) -> queue.remove(m));
     }
 
-    //need thread safety!!!
     @Override
     public Message awaitMessage(MicroService m) throws InterruptedException {
         LinkedBlockingQueue<Message> messages = services.get(m);

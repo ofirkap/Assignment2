@@ -28,6 +28,9 @@ public class Ewok {
         available = true;
     }
 
+    /**
+     * @return true if this ewok is available, false otherwise
+     */
     public boolean isAvailable() {
         return available;
     }

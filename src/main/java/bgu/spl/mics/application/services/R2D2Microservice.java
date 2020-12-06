@@ -27,6 +27,8 @@ public class R2D2Microservice extends MicroService {
     protected void initialize() {
 
         subscribeEvent(DeactivationEvent.class, (event) -> {
+            //Deactivate the shields (simulated by sleeping for the specified duration),
+            //and announce the completion of the deactivation.
             Thread.sleep(duration);
             complete(event, true);
         });
