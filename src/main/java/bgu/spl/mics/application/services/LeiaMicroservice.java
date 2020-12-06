@@ -41,6 +41,12 @@ public class LeiaMicroservice extends MicroService {
         for (int i = 0; i < attacks.length; i++) {
             attackResults[i] = sendEvent(new AttackEvent(attacks[i]));
         }
+
+        //send the 'AttackFinishTimeBroadcast' to han and c3po so they can register their finish time in the diary
+        //this broadcast will be added to han / c3po message queue after all the attacks
+        //and because of that it will be executed after them.
+        sendBroadcast(new AttackFinishTimeBroadcast());
+
         //get the results from all the attacks and ensure they all finished
         //if not wait for 500 Milli and try again
         while (!attackFinished) {
@@ -53,9 +59,6 @@ public class LeiaMicroservice extends MicroService {
                 } catch (InterruptedException ignored) {}
             }
         }
-
-        //send the 'AttackFinishTimeBroadcast' to han and c3po so they can register their finish time in the diary
-        sendBroadcast(new AttackFinishTimeBroadcast());
 
         //send r2d2 the deactivation event (because the attacks finished) and store the future result
         Future<Boolean> deactivationResult = sendEvent(new DeactivationEvent());

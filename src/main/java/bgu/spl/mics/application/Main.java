@@ -34,6 +34,7 @@ public class Main {
         Thread lando = new Thread(new LandoMicroservice(myInput.getLando()), "Lando");
 
         Diary myDiary = Diary.getInstance();
+        myDiary.setStartTime(System.currentTimeMillis());
 
         leia.start();
         han.start();

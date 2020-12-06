@@ -24,7 +24,11 @@ public class Diary {
     long C3POTerminate;
     long R2D2Terminate;
     long LandoTerminate;
+    long StartTime;
 
+    public void setStartTime(long startTime) {
+        StartTime = startTime;
+    }
 
     private Diary() {
         totalAttacks = new AtomicInteger(0);
@@ -48,35 +52,35 @@ public class Diary {
     }
 
     public void setHanSoloFinish(long hanSoloFinish) {
-        HanSoloFinish = hanSoloFinish;
+        HanSoloFinish = hanSoloFinish-StartTime;
     }
 
     public void setC3POFinish(long c3POFinish) {
-        C3POFinish = c3POFinish;
+        C3POFinish = c3POFinish-StartTime;
     }
 
     public void setR2D2Deactivate(long r2D2Deactivate) {
-        R2D2Deactivate = r2D2Deactivate;
+        R2D2Deactivate = r2D2Deactivate-StartTime;
     }
 
     public void setLeiaTerminate(long leiaTerminate) {
-        LeiaTerminate = leiaTerminate;
+        LeiaTerminate = leiaTerminate-StartTime;
     }
 
     public void setHanSoloTerminate(long hanSoloTerminate) {
-        HanSoloTerminate = hanSoloTerminate;
+        HanSoloTerminate = hanSoloTerminate-StartTime;
     }
 
     public void setC3POTerminate(long c3POTerminate) {
-        C3POTerminate = c3POTerminate;
+        C3POTerminate = c3POTerminate-StartTime;
     }
 
     public void setR2D2Terminate(long r2D2Terminate) {
-        R2D2Terminate = r2D2Terminate;
+        R2D2Terminate = r2D2Terminate-StartTime;
     }
 
     public void setLandoTerminate(long landoTerminate) {
-        LandoTerminate = landoTerminate;
+        LandoTerminate = landoTerminate-StartTime;
     }
 
 
