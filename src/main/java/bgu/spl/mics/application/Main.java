@@ -18,7 +18,7 @@ public class Main {
 
         Input myInput = null;
         try {
-            myInput = JsonInputReader.getInputFromJson(args[0]);
+            myInput = JsonInputReader.getInputFromJson("/home/spl211/IdeaProjects/Assignment2/input.json");
         } catch (IOException e) {
             System.out.println("Input not found");
             System.exit(0);
@@ -34,7 +34,6 @@ public class Main {
         Thread lando = new Thread(new LandoMicroservice(myInput.getLando()), "Lando");
 
         Diary myDiary = Diary.getInstance();
-        myDiary.setStartTime(System.currentTimeMillis());
 
         leia.start();
         han.start();
@@ -48,11 +47,11 @@ public class Main {
             c3po.join();
             r2d2.join();
             lando.join();
-        }catch (InterruptedException ignored){}
+        } catch (InterruptedException ignored) {}
 
         Gson myOutput = new GsonBuilder().setPrettyPrinting().create();
         try {
-            FileWriter writer = new FileWriter(args[1]);
+            FileWriter writer = new FileWriter("/home/spl211/IdeaProjects/Assignment2/Output.json");
             myOutput.toJson(myDiary, writer);
             writer.flush();
             writer.close();

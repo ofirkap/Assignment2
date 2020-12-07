@@ -54,9 +54,12 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     @SuppressWarnings("unchecked")
+    //resolve the future 'result' associated with event 'e' and remove it from 'events'
     public <T> void complete(Event<T> e, T result) {
-        if (events.containsKey(e))
+        if (events.containsKey(e)) {
             events.get(e).resolve(result);
+            events.remove(e);
+        }
     }
 
     //same lock as subscribe to ensure you cant subscribe to this broadcast type as it's being sent
@@ -74,9 +77,12 @@ public class MessageBusImpl implements MessageBus {
     //same lock as subscribe to ensure you cant subscribe to this event type as it's being sent
     @Override
     public <T> Future<T> sendEvent(Event<T> e) {
-        MicroService service = messageTypes.get(e.getClass()).poll();
-        if (service != null) {
-            synchronized (e.getClass()) {
+        ConcurrentLinkedQueue<MicroService> subscribed = messageTypes.get(e.getClass());
+        if (subscribed == null)
+            return null;
+        synchronized (e.getClass()) {
+            MicroService service = subscribed.poll();
+            if (service != null) {
                 services.get(service).add(e);
                 messageTypes.get(e.getClass()).add(service);
                 Future<T> future = new Future<>();

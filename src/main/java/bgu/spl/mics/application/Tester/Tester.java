@@ -1,4 +1,4 @@
-package bgu.spl.mics.Tester;
+package bgu.spl.mics.application.Tester;
 
 import bgu.spl.mics.*;
 import bgu.spl.mics.application.Main;
@@ -109,7 +109,7 @@ public class Tester {
         Test currentTests[];
         Diary diaryInstance = Diary.getInstance();
         try {
-            currentTests = getTestsFromJson("Tests.json");
+            currentTests = getTestsFromJson("/home/spl211/IdeaProjects/Assignment2/Tests.json");
             for (int i = 0; i < currentTests.length; i++) {
                 saveOutputToJson("input.json", currentTests[i]);
                 //An output file shall be only created whenever the program finishes it's logic.

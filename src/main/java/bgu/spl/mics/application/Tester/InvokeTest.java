@@ -1,4 +1,4 @@
-package bgu.spl.mics.Tester;
+package bgu.spl.mics.application.Tester;
 
 import java.util.Scanner;
 

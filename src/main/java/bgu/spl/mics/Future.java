@@ -33,9 +33,11 @@ public class Future<T> {
     public T get() {
         while (!isDone)
             synchronized (this) {
-                try {
-                    wait();
-                } catch (InterruptedException ignored) {}
+                if (!isDone) {
+                    try {
+                        wait();
+                    } catch (InterruptedException ignored) {}
+                }
             }
         return result;
     }
@@ -46,7 +48,7 @@ public class Future<T> {
     public synchronized void resolve(T result) {
         this.result = result;
         this.isDone = true;
-        this.notifyAll();
+        notifyAll();
     }
 
     /**
@@ -71,12 +73,19 @@ public class Future<T> {
     public T get(long timeout, TimeUnit unit) {
         if (!isDone) {
             synchronized (this) {
-                try {
-                    wait(unit.toMillis(timeout));
-                } catch (InterruptedException e) {
-                    get(timeout, unit);
+                /*
+                If the thread was interrupted it's because the function resolve was called and notified all waiting
+                threads that the result is available, otherwise the thread will leave the wait after the given time
+                has passed and a result wasn't provided, no exception will be thrown and the function will return null
+                */
+                if (!isDone) {
+                    try {
+                        wait(unit.toMillis(timeout));
+                    } catch (InterruptedException e) {
+                        get(timeout, unit);
+                    }
+                    return null;
                 }
-                return null;
             }
         }
         return result;

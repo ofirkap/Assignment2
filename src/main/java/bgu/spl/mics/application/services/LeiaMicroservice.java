@@ -37,6 +37,11 @@ public class LeiaMicroservice extends MicroService {
 
         Future<Boolean>[] attackResults = new Future[attacks.length];
         boolean attackFinished = false;
+        //leia waits for a short while before starting sending messages to make sure all other threads
+        //successfully subscribed to all relevant message types.
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException ignored) {}
         //send all the attacks for han and c3po to preform, store the future results in 'attackResults'
         for (int i = 0; i < attacks.length; i++) {
             attackResults[i] = sendEvent(new AttackEvent(attacks[i]));
