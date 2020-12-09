@@ -89,7 +89,7 @@ public class Tester {
     //Generates numOfTestsToGenerate Tests
     public void generateTests() {
         //Number of tests that are generated each time
-        int numOfTestsToGenerate = 20;
+        int numOfTestsToGenerate = 100;
         Test[] randTests = new Test[numOfTestsToGenerate];
         for (int i = 0; i < numOfTestsToGenerate; i++)
             randTests[i] = generateTest(i);
@@ -132,6 +132,7 @@ public class Tester {
                 System.out.println("Your Deactivation Shield Finished Time --> " + shieldDeactivationTestValue + "  Test Value Should Of Been -> " + currentTests[i].getR2D2Sleep());
                 if (Math.round(shieldDeactivationTestValue / 100) * 100 == (Math.round(currentTests[i].getR2D2Sleep()) / 100) * 100)
                     passedFirstTest = true;
+                System.out.println("Number Of Attacks Handled --> " + numOfAttacksInTest.get() + "  Test Value Should Of Been -> " + currentTests[i].getNumberOfAttacks().get());
                 if (numOfAttacksInTest.get() == (currentTests[i].getNumberOfAttacks().get()))
                     passedSecondTest = true;
 
@@ -241,8 +242,8 @@ public class Tester {
 
             boolean passedFirstTest = true;
             boolean passedSecondTest = true;
-            hanSoloObj = new HanSoloMicroservice();
-            C3POObj = new C3POMicroservice();
+            hanSoloObj = new HanSoloMicroservice(new CountDownLatch(1));
+            C3POObj = new C3POMicroservice(new CountDownLatch(1));
 
             MessageBusImpl messageInstance = MessageBusImpl.getInstance();
 
@@ -320,7 +321,7 @@ public class Tester {
             /*
              Multi Threaded Check Against SubscribingToEvents
             */
-            hanSoloObj = new HanSoloMicroservice();
+            hanSoloObj = new HanSoloMicroservice(new CountDownLatch(1));
             messageInstance.register(hanSoloObj);
             messageInstance.subscribeEvent(Event1.class, hanSoloObj);
             messageInstance.subscribeBroadcast(Broadcast1.class

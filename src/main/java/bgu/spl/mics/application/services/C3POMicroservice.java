@@ -7,6 +7,8 @@ import bgu.spl.mics.application.messages.TerminationBroadcast;
 import bgu.spl.mics.application.passiveObjects.Diary;
 import bgu.spl.mics.application.passiveObjects.Ewoks;
 
+import java.util.concurrent.CountDownLatch;
+
 
 /**
  * C3POMicroservices is in charge of the handling {@link AttackEvent}.
@@ -18,11 +20,13 @@ import bgu.spl.mics.application.passiveObjects.Ewoks;
  */
 public class C3POMicroservice extends MicroService {
 
-    Ewoks myVillage = Ewoks.getInstance();
-    Diary myDiary = Diary.getInstance();
+    private final Ewoks myVillage = Ewoks.getInstance();
+    private final Diary myDiary = Diary.getInstance();
+    private final CountDownLatch countDown;
 
-    public C3POMicroservice() {
+    public C3POMicroservice(CountDownLatch count) {
         super("C3PO");
+        this.countDown = count;
     }
 
     @Override
@@ -49,5 +53,6 @@ public class C3POMicroservice extends MicroService {
             terminate();
             myDiary.setC3POTerminate(System.currentTimeMillis());
         });
+        countDown.countDown();
     }
 }

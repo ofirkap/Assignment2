@@ -8,6 +8,8 @@ import bgu.spl.mics.application.messages.TerminationBroadcast;
 import bgu.spl.mics.application.passiveObjects.Diary;
 import bgu.spl.mics.application.passiveObjects.Ewoks;
 
+import java.util.concurrent.CountDownLatch;
+
 /**
  * HanSoloMicroservices is in charge of the handling {@link AttackEvent}.
  * This class may not hold references for objects which it is not responsible for:
@@ -18,11 +20,14 @@ import bgu.spl.mics.application.passiveObjects.Ewoks;
  */
 public class HanSoloMicroservice extends MicroService {
 
-    Ewoks myVillage = Ewoks.getInstance();
-    Diary myDiary = Diary.getInstance();
+    private final Ewoks myVillage = Ewoks.getInstance();
+    private final Diary myDiary = Diary.getInstance();
+    private final CountDownLatch countDown;
 
-    public HanSoloMicroservice() {
+    public HanSoloMicroservice(CountDownLatch count) {
         super("Han");
+        this.countDown = count;
+
     }
 
     @Override
@@ -49,5 +54,6 @@ public class HanSoloMicroservice extends MicroService {
             terminate();
             myDiary.setHanSoloTerminate(System.currentTimeMillis());
         });
+        countDown.countDown();
     }
 }

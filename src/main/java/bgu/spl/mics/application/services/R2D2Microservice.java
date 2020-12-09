@@ -31,9 +31,8 @@ public class R2D2Microservice extends MicroService {
             //and announce the completion of the deactivation.
             Thread.sleep(duration);
             complete(event, true);
+            myDiary.setR2D2Deactivate(System.currentTimeMillis());
         });
-
-        subscribeBroadcast(DeactivationFinishTimeBroadcast.class, (broadcast) -> myDiary.setR2D2Deactivate(System.currentTimeMillis()));
 
         subscribeBroadcast(TerminationBroadcast.class, (broadcast) -> {
             terminate();
