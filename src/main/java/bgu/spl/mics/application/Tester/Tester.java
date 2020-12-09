@@ -11,6 +11,7 @@ import com.google.gson.GsonBuilder;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Tester {
@@ -89,7 +90,7 @@ public class Tester {
     //Generates numOfTestsToGenerate Tests
     public void generateTests() {
         //Number of tests that are generated each time
-        int numOfTestsToGenerate = 100;
+        int numOfTestsToGenerate = 30;
         Test[] randTests = new Test[numOfTestsToGenerate];
         for (int i = 0; i < numOfTestsToGenerate; i++)
             randTests[i] = generateTest(i);
@@ -222,11 +223,14 @@ public class Tester {
                 System.out.println("no MicroServer is registered to the event");
             else{
                 String result=future.get();
-                if (result.equals("M1"))
-                    numberOfM1.getAndIncrement();
-                else if (result.equals("M2"))
-                    numberOfM2.getAndIncrement();
-                else numberOfM3.getAndIncrement();
+                if (result!=null) {
+                    if (result.equals("M1"))
+                        numberOfM1.getAndIncrement();
+                    else if (result.equals("M2"))
+                        numberOfM2.getAndIncrement();
+                    else numberOfM3.getAndIncrement();
+                }
+
             }
             terminateSend.countDown();
         }
@@ -318,9 +322,9 @@ public class Tester {
                 System.out.println("Failed EventList Clear Test - Didn't Clear Event List");
             else
                 System.out.println("EventList Clear Test Passed");
-            /*
-             Multi Threaded Check Against SubscribingToEvents
-            */
+
+             //Multi Threaded Check Against SubscribingToEvents
+
             hanSoloObj = new HanSoloMicroservice(new CountDownLatch(1));
             messageInstance.register(hanSoloObj);
             messageInstance.subscribeEvent(Event1.class, hanSoloObj);
@@ -370,7 +374,6 @@ public class Tester {
                     break; //If you are not syncing you will most likely get less then 1500
             } while (true);
             System.out.println("Passed Sync Send Event Test! All Is Fine.\r\n----------------------------------");
-
             System.out.println("\r\nInitating Test Sync By Sabina 1.....\r\n");
             boolean passedTestSabina = true;
 
@@ -387,7 +390,7 @@ public class Tester {
                 initialize.await();
                 CountDownLatch terminateSend = new CountDownLatch(j);
                 for (int i = 1; i <= j; i++) {
-                    new Thread(new SenderMicroServer("sender", terminateSend,terminate)).start();
+                    new Thread(new SenderMicroServer("sender "+i, terminateSend,terminate)).start();
                 }
                 terminateSend.await();
                 messageInstance.sendBroadcast(new Broadcast1());

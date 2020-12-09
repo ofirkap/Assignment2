@@ -33,22 +33,14 @@ public class MessageBusImpl implements MessageBus {
     //synchronization only on type to allow other, unrelated types to register as well
     @Override
     public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-        if (!messageTypes.containsKey(type))
-            synchronized (type) {
-                if (!messageTypes.containsKey(type))
-                    messageTypes.put(type, new ConcurrentLinkedQueue<>());
-            }
+        messageTypes.putIfAbsent(type, new ConcurrentLinkedQueue<>());
         messageTypes.get(type).add(m);
     }
 
     //synchronization only on type to allow other, unrelated types to register as well
     @Override
     public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-        if (!messageTypes.containsKey(type))
-            synchronized (type) {
-                if (!messageTypes.containsKey(type))
-                    messageTypes.put(type, new ConcurrentLinkedQueue<>());
-            }
+        messageTypes.putIfAbsent(type, new ConcurrentLinkedQueue<>());
         messageTypes.get(type).add(m);
     }
 
@@ -56,19 +48,18 @@ public class MessageBusImpl implements MessageBus {
     @SuppressWarnings("unchecked")
     //resolve the future 'result' associated with event 'e' and remove it from 'events'
     public <T> void complete(Event<T> e, T result) {
-        if (events.containsKey(e)) {
-            events.get(e).resolve(result);
-            events.remove(e);
+        synchronized (e) {
+                events.getOrDefault(e, new Future<T>()).resolve(result);
+                events.remove(e);
         }
     }
 
     //same lock as subscribe to ensure you cant subscribe to this broadcast type as it's being sent
     @Override
     public void sendBroadcast(Broadcast b) {
-        ConcurrentLinkedQueue<MicroService> receivers = messageTypes.get(b.getClass());
-        if (receivers != null) {
-            synchronized (b.getClass()) {
-                for (MicroService service : receivers)
+        if (messageTypes.get(b.getClass()) != null) {
+            synchronized (services) {
+                for (MicroService service : messageTypes.get(b.getClass()))
                     services.get(service).add(b);
             }
         }
@@ -77,35 +68,34 @@ public class MessageBusImpl implements MessageBus {
     //same lock as subscribe to ensure you cant subscribe to this event type as it's being sent
     @Override
     public <T> Future<T> sendEvent(Event<T> e) {
-        ConcurrentLinkedQueue<MicroService> subscribed = messageTypes.get(e.getClass());
-        if (subscribed == null)
+        if (messageTypes.get(e.getClass()) == null)
             return null;
-        synchronized (e.getClass()) {
-            MicroService service = subscribed.poll();
+        synchronized (messageTypes) {
+            MicroService service = messageTypes.get(e.getClass()).poll();
             if (service != null) {
-                services.get(service).add(e);
                 messageTypes.get(e.getClass()).add(service);
-                Future<T> future = new Future<>();
-                events.put(e, future);
-                return future;
+                synchronized (e) {
+                    services.get(service).add(e);
+                    events.putIfAbsent(e, new Future<>());
+                    return events.get(e);
+                }
             }
         }
         return null;
     }
 
-    //need thread safety!!!
     @Override
     public void register(MicroService m) {
-        if (!services.containsKey(m))
-            services.put(m, new LinkedBlockingQueue<>());
+            services.putIfAbsent(m, new LinkedBlockingQueue<>());
     }
 
-    //need thread safety!!!
     //Removes the message queue allocated to m and removes all of its subscriptions froms every message type
     @Override
     public void unregister(MicroService m) {
-        services.remove(m);
-        messageTypes.forEach((key, queue) -> queue.remove(m));
+            services.remove(m);
+        synchronized (messageTypes) {
+            messageTypes.forEach((key, queue) -> queue.remove(m));
+        }
     }
 
     @Override

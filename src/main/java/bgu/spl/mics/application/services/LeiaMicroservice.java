@@ -8,7 +8,6 @@ import bgu.spl.mics.application.passiveObjects.Attack;
 import bgu.spl.mics.application.passiveObjects.Diary;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 /**
  * LeiaMicroservices Initialized with Attack objects, and sends them as  {@link AttackEvent}.
@@ -39,7 +38,6 @@ public class LeiaMicroservice extends MicroService {
         });
 
         Future<Boolean>[] attackResults = new Future[attacks.length];
-        boolean attackFinished = false;
         //leia waits for a short while before starting sending messages to make sure all other threads
         //successfully subscribed to all relevant message types.
         try {
@@ -58,15 +56,13 @@ public class LeiaMicroservice extends MicroService {
         //get the results from all the attacks and ensure they all finished
         //if not wait for 500 Milli and try again
         for (int i = 0; i < attacks.length; i++) {
-            attackFinished = attackResults[i].get();
+            attackResults[i].get();
         }
 
         //send r2d2 the deactivation event (because the attacks finished) and store the future result
-        Future<Boolean> deactivationResult = sendEvent(new DeactivationEvent());
+        sendEvent(new DeactivationEvent());
         //get the result after completion, if the event haven't completed wait for 500 Milli and try again
-        boolean deactivationFinished = deactivationResult.get();
 
         //after the deactivation of the shields send lando the 'BombDestroyerEvent' to finally defeat the empire
-        sendEvent(new BombDestroyerEvent());
     }
 }

@@ -78,13 +78,12 @@ public class Future<T> {
                 threads that the result is available, otherwise the thread will leave the wait after the given time
                 has passed and a result wasn't provided, no exception will be thrown and the function will return null
                 */
-                if (!isDone) {
+                boolean waitedAlready = false;
+                while (!isDone && !waitedAlready) {
                     try {
                         wait(unit.toMillis(timeout));
-                    } catch (InterruptedException e) {
-                        get(timeout, unit);
-                    }
-                    return null;
+                    } catch (InterruptedException ignored) {}
+                    waitedAlready=true;
                 }
             }
         }
