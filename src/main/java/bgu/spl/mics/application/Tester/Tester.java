@@ -90,7 +90,7 @@ public class Tester {
     //Generates numOfTestsToGenerate Tests
     public void generateTests() {
         //Number of tests that are generated each time
-        int numOfTestsToGenerate = 30;
+        int numOfTestsToGenerate = 1000;
         Test[] randTests = new Test[numOfTestsToGenerate];
         for (int i = 0; i < numOfTestsToGenerate; i++)
             randTests[i] = generateTest(i);
@@ -131,7 +131,7 @@ public class Tester {
                 boolean passedThirdTest = true;  //Checking Graceful Termination (Should be at the same mili second~)
 
                 System.out.println("Your Deactivation Shield Finished Time --> " + shieldDeactivationTestValue + "  Test Value Should Of Been -> " + currentTests[i].getR2D2Sleep());
-                if (Math.round(shieldDeactivationTestValue / 100) * 100 == (Math.round(currentTests[i].getR2D2Sleep()) / 100) * 100)
+                if (Math.abs(shieldDeactivationTestValue-currentTests[i].getR2D2Sleep())<=50 || Math.round(shieldDeactivationTestValue / 100) * 100 == (Math.round(currentTests[i].getR2D2Sleep()) / 100) * 100)
                     passedFirstTest = true;
                 System.out.println("Number Of Attacks Handled --> " + numOfAttacksInTest.get() + "  Test Value Should Of Been -> " + currentTests[i].getNumberOfAttacks().get());
                 if (numOfAttacksInTest.get() == (currentTests[i].getNumberOfAttacks().get()))

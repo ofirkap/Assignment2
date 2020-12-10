@@ -32,6 +32,7 @@ public class R2D2Microservice extends MicroService {
             Thread.sleep(duration);
             complete(event, true);
             myDiary.setR2D2Deactivate(System.currentTimeMillis());
+            //After deactivating the shields send lando the 'BombDestroyerEvent' to finally defeat the empire (for now)
             sendEvent(new BombDestroyerEvent());
         });
 
