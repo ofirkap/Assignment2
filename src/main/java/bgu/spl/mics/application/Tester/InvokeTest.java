@@ -15,9 +15,9 @@ public class InvokeTest {
         Tester myTester = new Tester();
 
         if(choosenOption == 2)  myTester.generateTests();  else
-            if(choosenOption == 1)
+        if(choosenOption == 1)
             myTester.runTestsFromFile();
-            else if(choosenOption == 3)
+        else if(choosenOption == 3)
             myTester.runLogicalTests();
     }
 }

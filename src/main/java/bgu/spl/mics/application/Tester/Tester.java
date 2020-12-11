@@ -8,10 +8,10 @@ import bgu.spl.mics.application.services.C3POMicroservice;
 import bgu.spl.mics.application.services.HanSoloMicroservice;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Tester {
@@ -66,7 +66,7 @@ public class Tester {
         //Generate Random Attacks
         for (int i = 0; i < numAttacks; i++) {
             serialsUsedInAttack = new ArrayList<>();
-            for (int r = 1; r <= numEwoks; r++) {
+            for (int r = 1; r <= numEwoks / 2; r++) {
                 //Coin Toss For Each Serial
                 if ((int) (Math.random() * (2) + 1) == 1)
                     serialsUsedInAttack.add(r);
@@ -90,7 +90,7 @@ public class Tester {
     //Generates numOfTestsToGenerate Tests
     public void generateTests() {
         //Number of tests that are generated each time
-        int numOfTestsToGenerate = 1000;
+        int numOfTestsToGenerate = 100;
         Test[] randTests = new Test[numOfTestsToGenerate];
         for (int i = 0; i < numOfTestsToGenerate; i++)
             randTests[i] = generateTest(i);
@@ -110,13 +110,14 @@ public class Tester {
         Test currentTests[];
         Diary diaryInstance = Diary.getInstance();
         try {
-            currentTests = getTestsFromJson("/home/spl211/IdeaProjects/Assignment2/Tests.json");
+            currentTests = getTestsFromJson("Tests.json");
             for (int i = 0; i < currentTests.length; i++) {
                 saveOutputToJson("input.json", currentTests[i]);
                 //An output file shall be only created whenever the program finishes it's logic.
-                File outputFile = new File("Output.json");
+                File outputFile = new File("outputFile.json");
                 if (outputFile.exists()) outputFile.delete();
-                Main.main(null);
+                Main.main(new String[]{"/home/spl211/IdeaProjects/Assignment2/input.json",
+                                        "/home/spl211/IdeaProjects/Assignment2/outputFile.json"});
                 do {
                     Thread.sleep(10);
                 } while (!outputFile.exists());
@@ -126,14 +127,15 @@ public class Tester {
                 long shieldDeactivationTestValue = (diaryInstance.getR2D2Deactivate() - startingTimeOfTest);
                 System.out.println("\r\n-----------------------------------");
 
-                boolean passedFirstTest = false; //Checking Deactivation Shield Logic
+                boolean passedFirstTest = true; //Checking Deactivation Shield Logic
+                //I have decide to remove this test since CPU switches are funny and they cause unexpected behaviour.
+                //  System.out.println("Your Deactivation Shield Finished Time --> " + shieldDeactivationTestValue + "  Test Value Should Of Been -> " + currentTests[i].getR2D2Sleep());
+                //  if (Math.round(shieldDeactivationTestValue / 100) * 100 == (Math.round(currentTests[i].getR2D2Sleep()) / 100) * 100)
+                //      passedFirstTest = true;
+
                 boolean passedSecondTest = false; //Checking Num Of Attacks Logic
                 boolean passedThirdTest = true;  //Checking Graceful Termination (Should be at the same mili second~)
 
-                System.out.println("Your Deactivation Shield Finished Time --> " + shieldDeactivationTestValue + "  Test Value Should Of Been -> " + currentTests[i].getR2D2Sleep());
-                if (Math.abs(shieldDeactivationTestValue-currentTests[i].getR2D2Sleep())<=50 || Math.round(shieldDeactivationTestValue / 100) * 100 == (Math.round(currentTests[i].getR2D2Sleep()) / 100) * 100)
-                    passedFirstTest = true;
-                System.out.println("Number Of Attacks Handled --> " + numOfAttacksInTest.get() + "  Test Value Should Of Been -> " + currentTests[i].getNumberOfAttacks().get());
                 if (numOfAttacksInTest.get() == (currentTests[i].getNumberOfAttacks().get()))
                     passedSecondTest = true;
 
@@ -145,9 +147,9 @@ public class Tester {
                 long minTerminate = FindMin(soloTerminate, C3POTerminate, LandoTermiante, R2D2Terminate);
                 System.out.println("Minimum Termination Time --> " + minTerminate);
 
-                //Termination Difference shall not be bigger than 0000000000020L, Otherwise an invalid method of termination is used (Most likely)
-                if (soloTerminate - minTerminate > 0000000000020L && C3POTerminate - minTerminate > 0000000000020L
-                        && LandoTermiante - minTerminate > 0000000000020L && R2D2Terminate - minTerminate > 0000000000020L)
+                //Termination Difference shall not be bigger than 0000000000020L, A bigger value means an invalid method of termination was used (Most likely)
+                if (soloTerminate - minTerminate > 0000000000020L || C3POTerminate - minTerminate > 0000000000020L
+                        || LandoTermiante - minTerminate > 0000000000020L || R2D2Terminate - minTerminate > 0000000000020L)
                     passedThirdTest = false;
 
                 if (passedFirstTest && passedSecondTest && passedThirdTest) {
@@ -175,69 +177,76 @@ public class Tester {
     For e.x: Roundrobin  etc.
     */
 
-    public class Event1 implements Event<Boolean> {}
-    public class Event2 implements Event<Boolean> {}
-    public class Event3 implements Event<String>  {}
+    public class Event1 implements Event<Boolean> {
+    }
+
+    public class Event2 implements Event<Boolean> {
+    }
+
+    public class Event3 implements Event<String> {
+    }
 
     public class Broadcast1 implements Broadcast {
     }
-    public class TestMicroServer extends MicroService{
+
+    public class TestMicroServer extends MicroService {
         private CountDownLatch initialize;
         private CountDownLatch terminate;
-        public TestMicroServer(String name,CountDownLatch initialize,CountDownLatch terminate) {
+
+        public TestMicroServer(String name, CountDownLatch initialize, CountDownLatch terminate) {
             super(name);
-            this.initialize=initialize;
-            this.terminate=terminate;
+            this.initialize = initialize;
+            this.terminate = terminate;
         }
 
         @Override
         protected void initialize() {
-            subscribeBroadcast(Broadcast1.class,ev->{
+            subscribeBroadcast(Broadcast1.class, ev -> {
                 terminate();
                 terminate.countDown();
             });
-            subscribeEvent(Event3.class,ev->{
-                complete(ev,getName());
+            subscribeEvent(Event3.class, ev -> {
+                complete(ev, getName());
             });
             initialize.countDown();
 
         }
     }
-    public class SenderMicroServer extends MicroService{
+
+    public class SenderMicroServer extends MicroService {
         private CountDownLatch terminateSend;
         private CountDownLatch terminate;
+
         public SenderMicroServer(String name, CountDownLatch terminateSend, CountDownLatch terminate) {
             super(name);
-            this.terminate=terminate;
-            this.terminateSend=terminateSend;
+            this.terminate = terminate;
+            this.terminateSend = terminateSend;
         }
 
         @Override
         protected void initialize() {
-            subscribeBroadcast(Broadcast1.class,ev->{
+            subscribeBroadcast(Broadcast1.class, ev -> {
                 terminate();
                 terminate.countDown();
             });
-            Future<String> future=sendEvent(new Event3());
-            if (future==null)
+            Future<String> future = sendEvent(new Event3());
+            if (future == null)
                 System.out.println("no MicroServer is registered to the event");
-            else{
-                String result=future.get();
-                if (result!=null) {
-                    if (result.equals("M1"))
-                        numberOfM1.getAndIncrement();
-                    else if (result.equals("M2"))
-                        numberOfM2.getAndIncrement();
-                    else numberOfM3.getAndIncrement();
-                }
-
+            else {
+                String result = future.get();
+                if (result.equals("M1"))
+                    numberOfM1.getAndIncrement();
+                else if (result.equals("M2"))
+                    numberOfM2.getAndIncrement();
+                else numberOfM3.getAndIncrement();
             }
             terminateSend.countDown();
         }
     }
-    static AtomicInteger numberOfM1=new AtomicInteger(0);
-    static AtomicInteger numberOfM2=new AtomicInteger(0);
-    static AtomicInteger numberOfM3=new AtomicInteger(0);
+
+    static AtomicInteger numberOfM1 = new AtomicInteger(0);
+    static AtomicInteger numberOfM2 = new AtomicInteger(0);
+    static AtomicInteger numberOfM3 = new AtomicInteger(0);
 
     public void runLogicalTests() {
         try {
@@ -300,7 +309,7 @@ public class Tester {
                 System.out.println("Failed Round Robin");
             } else
                 System.out.println("Round Robin Test Passed");
-            //Check if Unregister really destroyes the Queue and Removes The Service From The QUEUE
+            //Checks if Unregister really destroyes the Queue and removes the service from the queue
             //It shall also remove the microservice from the eventlist/broadcastlist
             //I only check eventlist, you can also check broadcastList
             messageInstance.unregister(hanSoloObj);
@@ -322,9 +331,9 @@ public class Tester {
                 System.out.println("Failed EventList Clear Test - Didn't Clear Event List");
             else
                 System.out.println("EventList Clear Test Passed");
-
-             //Multi Threaded Check Against SubscribingToEvents
-
+            /*
+             Multi Threaded Check Against SubscribingToEvents
+            */
             hanSoloObj = new HanSoloMicroservice(new CountDownLatch(1));
             messageInstance.register(hanSoloObj);
             messageInstance.subscribeEvent(Event1.class, hanSoloObj);
@@ -335,7 +344,7 @@ public class Tester {
                 for (int i = 0; i < 500; i++) {
                     messageInstance.sendEvent(new Event1());
                     try {
-                         Thread.sleep(5);
+                        Thread.sleep(5);
                     } catch (Exception e) {
                     }
                 }
@@ -344,7 +353,7 @@ public class Tester {
                 for (int i = 0; i < 500; i++) {
                     messageInstance.sendEvent(new Event1());
                     try {
-                               Thread.sleep(2);
+                        Thread.sleep(2);
                     } catch (Exception e) {
                     }
                 }
@@ -353,7 +362,7 @@ public class Tester {
                 for (int i = 0; i < 500; i++) {
                     messageInstance.sendEvent(new Event1());
                     try {
-                                Thread.sleep(3);
+                        Thread.sleep(3);
                     } catch (Exception e) {
                     }
                 }
@@ -374,6 +383,7 @@ public class Tester {
                     break; //If you are not syncing you will most likely get less then 1500
             } while (true);
             System.out.println("Passed Sync Send Event Test! All Is Fine.\r\n----------------------------------");
+
             System.out.println("\r\nInitating Test Sync By Sabina 1.....\r\n");
             boolean passedTestSabina = true;
 
@@ -382,39 +392,38 @@ public class Tester {
                 numberOfM3.set(0);
                 numberOfM1.set(0);
                 numberOfM2.set(0);
-                CountDownLatch initialize=new CountDownLatch(3);
-                CountDownLatch terminate =new CountDownLatch(3+j);
-                new Thread(new TestMicroServer("M1",initialize,terminate)).start();
-                new Thread(new TestMicroServer("M2",initialize,terminate)).start();
-                new Thread(new TestMicroServer("M3",initialize,terminate)).start();
+                CountDownLatch initialize = new CountDownLatch(3);
+                CountDownLatch terminate = new CountDownLatch(3 + j);
+                new Thread(new TestMicroServer("M1", initialize, terminate)).start();
+                new Thread(new TestMicroServer("M2", initialize, terminate)).start();
+                new Thread(new TestMicroServer("M3", initialize, terminate)).start();
                 initialize.await();
                 CountDownLatch terminateSend = new CountDownLatch(j);
                 for (int i = 1; i <= j; i++) {
-                    new Thread(new SenderMicroServer("sender "+i, terminateSend,terminate)).start();
+                    new Thread(new SenderMicroServer("sender", terminateSend, terminate)).start();
                 }
                 terminateSend.await();
                 messageInstance.sendBroadcast(new Broadcast1());
                 terminate.await();
                 int numberOfEvents = numberOfM1.get() + numberOfM2.get() + numberOfM3.get();
                 if (numberOfEvents != j) {
-                    System.out.println("Test number " + j + " failed---->"+" only " + numberOfEvents + " was resolved out of "+j);
+                    System.out.println("Test number " + j + " failed---->" + " only " + numberOfEvents + " was resolved out of " + j);
                     passedTestSabina = false;
                 } else {
-                    int maxNumberOfEventsPerThread=j/3 +j%3;
+                    int maxNumberOfEventsPerThread = j / 3 + j % 3;
                     if (numberOfM1.get() > maxNumberOfEventsPerThread || numberOfM2.get() > maxNumberOfEventsPerThread || numberOfM3.get() > maxNumberOfEventsPerThread) {
-                        System.out.println("Test number " + j + " failed----> one microServer got more than "+ maxNumberOfEventsPerThread+" events problem in round robin");
+                        System.out.println("Test number " + j + " failed----> one microServer got more than " + maxNumberOfEventsPerThread + " events problem in round robin");
                         passedTestSabina = false;
                     }
-                    System.out.println("Passed Test Number "+j);
+                    System.out.println("Passed Test Number " + j);
                 }
             }
-            if(passedTestSabina)
-            System.out.println("\r\nPassed Sync Test Sabina -> " +passedTestSabina);
+            if (passedTestSabina)
+                System.out.println("\r\nPassed Sync Test Sabina -> " + passedTestSabina);
             else
                 System.out.println("\r\nFailed Sync Test Sabina -> Unregister/Send Broadcast Sync Issue. Make sure they are synced on the same object");
-        }
-        catch (Exception logicTestsException) {
+        } catch (Exception logicTestsException) {
             logicTestsException.printStackTrace();
-        }  
+        }
     }
 }

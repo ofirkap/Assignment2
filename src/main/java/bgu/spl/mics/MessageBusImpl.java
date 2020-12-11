@@ -78,7 +78,7 @@ public class MessageBusImpl implements MessageBus {
     public <T> Future<T> sendEvent(Event<T> e) {
         if (messageTypes.get(e.getClass()) == null)
             return null;
-        synchronized (e.getClass()) {
+        synchronized (messageTypes) {
             MicroService service = messageTypes.get(e.getClass()).poll();
             if (service != null) {
                 messageTypes.get(e.getClass()).add(service);
@@ -103,9 +103,9 @@ public class MessageBusImpl implements MessageBus {
     @Override
     public void unregister(MicroService m) {
         services.remove(m);
-        //synchronized (messageTypes) {
+        synchronized (messageTypes) {
             messageTypes.forEach((key, queue) -> queue.remove(m));
-        //}
+        }
     }
 
     //Return the first message waiting to be handled from the message queue or wait for one to appear

@@ -19,7 +19,7 @@ public class Main {
 
         Input myInput = null;
         try {
-            myInput = JsonInputReader.getInputFromJson("/home/spl211/IdeaProjects/Assignment2/input.json");
+            myInput = JsonInputReader.getInputFromJson(args[0]);
         } catch (IOException e) {
             System.out.println("Input not found");
             System.exit(0);
@@ -29,13 +29,13 @@ public class Main {
         Ewoks village = Ewoks.getInstance();
         village.setEwoksVillage(myInput.getEwoks());
         Attack[] attacks = myInput.getAttacks();
+        Diary myDiary = Diary.getInstance();
+
         Thread leia = new Thread(new LeiaMicroservice(attacks, count), "Leia");
         Thread han = new Thread(new HanSoloMicroservice(count), "HanSolo");
         Thread c3po = new Thread(new C3POMicroservice(count), "C3PO");
         Thread r2d2 = new Thread(new R2D2Microservice(myInput.getR2D2()), "R2D2");
         Thread lando = new Thread(new LandoMicroservice(myInput.getLando()), "Lando");
-
-        Diary myDiary = Diary.getInstance();
 
         leia.start();
         han.start();
@@ -53,7 +53,7 @@ public class Main {
 
         Gson myOutput = new GsonBuilder().setPrettyPrinting().create();
         try {
-            FileWriter writer = new FileWriter("/home/spl211/IdeaProjects/Assignment2/Output.json");
+            FileWriter writer = new FileWriter(args[1]);
             myOutput.toJson(myDiary, writer);
             writer.flush();
             writer.close();
