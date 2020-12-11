@@ -5,7 +5,7 @@ public class Input {
 	int R2D2;
 	int Lando;
 	int Ewoks;
-	
+
 	public int getEwoks() {
 		return Ewoks;
 	}

@@ -14,9 +14,6 @@ public class Future<T> {
     private boolean isDone;
     private T result;
 
-    private final Object getLock = new Object();
-    private final Object resolveLock = new Object();
-
     /**
      * This should be the the only public constructor in this class.
      */
@@ -33,14 +30,14 @@ public class Future<T> {
      *
      * @return return the result of type T if it is available, if not wait until it is available.
      */
-    //is there a better thread safety method here???
-    //what happens if resolve and get act simultaneously???
     public T get() {
         while (!isDone)
-            synchronized (getLock) {
-                try {
-                    wait();
-                } catch (InterruptedException ignored) {}
+            synchronized (this) {
+                if (!isDone) {
+                    try {
+                        wait();
+                    } catch (InterruptedException ignored) {}
+                }
             }
         return result;
     }
@@ -48,14 +45,10 @@ public class Future<T> {
     /**
      * Resolves the result of this Future object.
      */
-    //is there a better thread safety method here???
-    //what happens if resolve and get act simultaneously???
-    public void resolve(T result) {
-        synchronized (resolveLock) {
-            this.result = result;
-            this.isDone = true;
-            this.notifyAll();
-        }
+    public synchronized void resolve(T result) {
+        this.result = result;
+        this.isDone = true;
+        notifyAll();
     }
 
     /**
@@ -77,17 +70,21 @@ public class Future<T> {
      * wait for {@code timeout} TimeUnits {@code unit}. If time has
      * elapsed, return null.
      */
-    //is there a better thread safety method here???
-    //what happens if resolve and get act simultaneously???
     public T get(long timeout, TimeUnit unit) {
         if (!isDone) {
-            synchronized (getLock) {
-                try {
-                    wait(unit.toMillis(timeout));
-                } catch (InterruptedException e) {
-                    get(timeout, unit);
+            synchronized (this) {
+                /*
+                If the thread was interrupted it's because the function resolve was called and notified all waiting
+                threads that the result is available, otherwise the thread will leave the wait after the given time
+                has passed and a result wasn't provided, no exception will be thrown and the function will return null
+                */
+                boolean waitedAlready = false;
+                while (!isDone && !waitedAlready) {
+                    try {
+                        wait(unit.toMillis(timeout));
+                    } catch (InterruptedException ignored) {}
+                    waitedAlready=true;
                 }
-                return null;
             }
         }
         return result;

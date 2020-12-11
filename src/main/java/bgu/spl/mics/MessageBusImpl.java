@@ -15,7 +15,9 @@ public class MessageBusImpl implements MessageBus {
         private static final MessageBusImpl instance = new MessageBusImpl();
     }
 
+    //HashMap of message queues for each service subscribed to the bus
     private final ConcurrentHashMap<MicroService, LinkedBlockingQueue<Message>> services;
+    //HashMap of round robin queues for each message type
     private final ConcurrentHashMap<Class, ConcurrentLinkedQueue<MicroService>> messageTypes;
     private final ConcurrentHashMap<Event, Future> events;
 
@@ -25,86 +27,88 @@ public class MessageBusImpl implements MessageBus {
         events = new ConcurrentHashMap<>();
     }
 
-    //The messageBus is a Singleton
+    /**
+     * The messageBus is implemented as a Singleton
+     */
     public static MessageBusImpl getInstance() {
         return SingletonHolder.instance;
     }
 
-    //synchronization only on type to allow other, unrelated types to register as well
+    //Create a new round robin queue for event 'type' if absent and add 'm' to it
     @Override
     public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-        if (!messageTypes.containsKey(type))
-            synchronized (type) {
-                if (!messageTypes.containsKey(type))
-                    messageTypes.put(type, new ConcurrentLinkedQueue<>());
-            }
+        messageTypes.putIfAbsent(type, new ConcurrentLinkedQueue<>());
         messageTypes.get(type).add(m);
     }
 
-    //synchronization only on type to allow other, unrelated types to register as well
+    //Create a new round robin queue for broadcast 'type' if absent and add 'm' to it
     @Override
     public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-        if (!messageTypes.containsKey(type))
-            synchronized (type) {
-                if (!messageTypes.containsKey(type))
-                    messageTypes.put(type, new ConcurrentLinkedQueue<>());
-            }
+        messageTypes.putIfAbsent(type, new ConcurrentLinkedQueue<>());
         messageTypes.get(type).add(m);
     }
 
-    //need thread safety!!!
-    //make sure 2 services cant handle same event
     @Override
     @SuppressWarnings("unchecked")
+    //resolve the future 'result' associated with event 'e' and remove it from 'events'
+    //synchronized with the corresponding sendEvent call
+    //to make sure thread 1 finishes sending the event before thread 2 completes it.
     public <T> void complete(Event<T> e, T result) {
-        if (events.containsKey(e))
-            events.get(e).resolve(result);
-    }
-
-    //same lock as subscribe to ensure you cant subscribe to this broadcast type as it's being sent
-    @Override
-    public void sendBroadcast(Broadcast b) {
-        ConcurrentLinkedQueue<MicroService> receivers = messageTypes.get(b.getClass());
-        if (receivers != null) {
-            synchronized (b.getClass()) {
-                for (MicroService service : receivers)
-                    services.get(service).add(b);
-            }
+        synchronized (e) {
+            events.getOrDefault(e, new Future<T>()).resolve(result);
+            events.remove(e);
         }
     }
 
-    //same lock as subscribe to ensure you cant subscribe to this event type as it's being sent
+    //Loop on all services who subscribed to broadcast b and add it to their message queue
+    @Override
+    public void sendBroadcast(Broadcast b) {
+        if (messageTypes.get(b.getClass()) != null) {
+            for (MicroService service : messageTypes.get(b.getClass()))
+                services.get(service).add(b);
+        }
+    }
+
+    //Pop the first service waiting for event of type 'e' from the round robin queue and add 'e' to his message queue
+    //synchronized on 'messageTypes' to restrict unregistering a service while it receives an event
+    //synchronized on 'messageTypes' to restrict 2 threads sending event simultaniusly
+    //synchronized with the corresponding complete call
+    //to make sure thread 1 finishes sending the event before thread 2 completes it.
     @Override
     public <T> Future<T> sendEvent(Event<T> e) {
-        MicroService service = messageTypes.get(e.getClass()).poll();
-        if (service != null) {
-            synchronized (e.getClass()) {
-                services.get(service).add(e);
+        if (messageTypes.get(e.getClass()) == null)
+            return null;
+        synchronized (messageTypes) {
+            MicroService service = messageTypes.get(e.getClass()).poll();
+            if (service != null) {
                 messageTypes.get(e.getClass()).add(service);
-                Future<T> future = new Future<>();
-                events.put(e, future);
-                return future;
+                synchronized (e) {
+                    services.get(service).add(e);
+                    events.putIfAbsent(e, new Future<>());
+                    return events.get(e);
+                }
             }
         }
         return null;
     }
 
-    //need thread safety!!!
+    //Create a new message queue for the service 'm'
     @Override
     public void register(MicroService m) {
-        if (!services.containsKey(m))
-            services.put(m, new LinkedBlockingQueue<>());
+        services.putIfAbsent(m, new LinkedBlockingQueue<>());
     }
 
-    //need thread safety!!!
-    //Removes the message queue allocated to m and removes all of its subscriptions froms every message type
+    //Removes the message queue allocated to 'm' and removes all of its subscriptions froms every message type
+    //synchronized on 'messageTypes' to restrict unregistering a service while it receives an event
     @Override
     public void unregister(MicroService m) {
         services.remove(m);
-        messageTypes.forEach((key, queue) -> queue.remove(m));
+        synchronized (messageTypes) {
+            messageTypes.forEach((key, queue) -> queue.remove(m));
+        }
     }
 
-    //need thread safety!!!
+    //Return the first message waiting to be handled from the message queue or wait for one to appear
     @Override
     public Message awaitMessage(MicroService m) throws InterruptedException {
         LinkedBlockingQueue<Message> messages = services.get(m);
