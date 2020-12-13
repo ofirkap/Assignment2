@@ -18,7 +18,8 @@ public class MessageBusImpl implements MessageBus {
     //HashMap of message queues for each service subscribed to the bus
     private final ConcurrentHashMap<MicroService, LinkedBlockingQueue<Message>> services;
     //HashMap of round robin queues for each message type
-    private final ConcurrentHashMap<Class, ConcurrentLinkedQueue<MicroService>> messageTypes;
+    private final ConcurrentHashMap<Class<? extends Message>, ConcurrentLinkedQueue<MicroService>> messageTypes;
+    @SuppressWarnings("rawtypes")
     private final ConcurrentHashMap<Event, Future> events;
 
     private MessageBusImpl() {
@@ -75,6 +76,7 @@ public class MessageBusImpl implements MessageBus {
     //synchronized with the corresponding complete call
     //to make sure thread 1 finishes sending the event before thread 2 completes it.
     @Override
+    @SuppressWarnings("unchecked")
     public <T> Future<T> sendEvent(Event<T> e) {
         if (messageTypes.get(e.getClass()) == null)
             return null;

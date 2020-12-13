@@ -30,6 +30,7 @@ public class LeiaMicroservice extends MicroService {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void initialize() {
 
         subscribeBroadcast(TerminationBroadcast.class, (broadcast) -> {

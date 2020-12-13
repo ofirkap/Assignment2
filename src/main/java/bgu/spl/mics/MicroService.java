@@ -24,7 +24,7 @@ public abstract class MicroService implements Runnable {
     
 private final String name;
 private boolean terminated = false;
-private  ConcurrentHashMap<Class<?>,Callback<?>> callbacks;
+private final ConcurrentHashMap<Class<?>,Callback<?>> callbacks;
 private static MessageBusImpl messageBus;
 
 
@@ -154,6 +154,7 @@ private static MessageBusImpl messageBus;
      * otherwise you will end up in an infinite loop.
      */
     @Override
+    @SuppressWarnings({"rawtypes","unchecked"})
     public final void run() {
     	messageBus.register(this);
     	initialize();
