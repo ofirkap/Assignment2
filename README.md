@@ -4,8 +4,8 @@
 ## compiled on Ubuntu 18.04.1 LTS
 
 
-Publication date: ​ **22.11.**
-Deadline: ​ **29.11.2020 23:**
+Publication date: ​ **22.11.2020**
+Deadline: ​ **13.12.2020**
 
 
 ## 1 INTRODUCTION
