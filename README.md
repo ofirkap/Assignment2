@@ -1,4 +1,4 @@
-# SPL211 - ASSIGNMENT 2
+# SPL211 - Microservice System
 
 ## Java Generics, Concurrency, and Synchronization
 ## compiled on Ubuntu 18.04.1 LTS
